@@ -5,6 +5,9 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/smeyanoff/prefect-observer.svg)]()
 [![Helm Chart](https://img.shields.io/badge/helm-chart-blue.svg)]()
 
+![image](https://github.com/user-attachments/assets/7a9119f5-4056-4a2b-a786-d6bb266001ea)
+
+
 <!-- README на русском -->
 
 ## Содержание
