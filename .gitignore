@@ -1,0 +1,6 @@
+.qodo
+*.zip
+*.log
+.env
+values-*.yaml
+build/

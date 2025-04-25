@@ -1,0 +1,730 @@
+basePath: /v1
+definitions:
+  requests.Parameters:
+    properties:
+      parameters:
+        $ref: '#/definitions/value.JSONB'
+    required:
+    - parameters
+    type: object
+  requests.Senpost:
+    properties:
+      description:
+        type: string
+      global_parameters:
+        $ref: '#/definitions/value.JSONB'
+      sendpost_name:
+        type: string
+    required:
+    - sendpost_name
+    type: object
+  requests.Stage:
+    properties:
+      deployment_id:
+        type: string
+      previous_stage_id:
+        type: integer
+      stage_parameters:
+        $ref: '#/definitions/value.JSONB'
+      type:
+        $ref: '#/definitions/value.StageType'
+    required:
+    - deployment_id
+    - type
+    type: object
+  responses.Sendpost:
+    properties:
+      description:
+        type: string
+      global_parameters:
+        $ref: '#/definitions/value.JSONB'
+      id:
+        type: integer
+      name:
+        type: string
+      state:
+        type: string
+    required:
+    - id
+    - name
+    - state
+    type: object
+  responses.Stage:
+    properties:
+      id:
+        type: integer
+      is_blocked:
+        type: boolean
+      state:
+        $ref: '#/definitions/value.StateType'
+      type:
+        $ref: '#/definitions/value.StageType'
+    required:
+    - id
+    - is_blocked
+    - state
+    - type
+    type: object
+  responses.StageDetailed:
+    properties:
+      deployment_id:
+        type: string
+      id:
+        type: integer
+      parent_stage_id:
+        type: integer
+      stage_parameters:
+        $ref: '#/definitions/value.JSONB'
+      state:
+        $ref: '#/definitions/value.StateType'
+      type:
+        $ref: '#/definitions/value.StageType'
+    required:
+    - deployment_id
+    - id
+    - state
+    - type
+    type: object
+  value.JSONB:
+    additionalProperties: true
+    type: object
+  value.StageType:
+    enum:
+    - PARALLEL
+    - SEQUENTIAL
+    - OBSERVER
+    type: string
+    x-enum-varnames:
+    - ParallelStage
+    - SequentialStage
+    - ObserverStage
+  value.StateType:
+    enum:
+    - SCHEDULED
+    - PENDING
+    - RUNNING
+    - COMPLETED
+    - FAILED
+    - CANCELLED
+    - CRASHED
+    - PAUSED
+    - CANCELLING
+    - NEVERRUNNING
+    - UPDATED
+    type: string
+    x-enum-varnames:
+    - Scheduled
+    - Pending
+    - Running
+    - Completed
+    - Failed
+    - Cancelled
+    - Crashed
+    - Paused
+    - Cancelling
+    - NeverRunning
+    - Updated
+host: localhost:8180
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a backend for OBSERVER app.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: OBSERVER backend
+  version: "1.2"
+paths:
+  /prefectV2/{deployment_id}/parameters:
+    get:
+      consumes:
+      - application/json
+      description: Get parameters of a stage by its ID.
+      operationId: GetStageParameters
+      parameters:
+      - description: Deployment ID
+        in: path
+        name: deployment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved parameters
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get stage parameters
+      tags:
+      - Stage Info
+  /sendposts:
+    get:
+      consumes:
+      - application/json
+      description: Get sendposts
+      operationId: GetSendposts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully get
+          schema:
+            items:
+              $ref: '#/definitions/responses.Sendpost'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a sendposts
+      tags:
+      - Sendpost
+    post:
+      consumes:
+      - application/json
+      description: Creates a new sendpost with the specified parameters
+      operationId: CreateSendpost
+      parameters:
+      - description: Sendpost creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Senpost'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully created
+          schema:
+            $ref: '#/definitions/responses.Sendpost'
+        "400":
+          description: Validation error
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Create a sendpost
+      tags:
+      - Sendpost
+  /sendposts/{sendpost_id}:
+    delete:
+      description: Deletes a sendpost by its ID along with all associated stages
+      operationId: DeleteSendpost
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: Successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete a sendpost
+      tags:
+      - Sendpost
+    get:
+      consumes:
+      - application/json
+      description: Get a sendpost with provided sendpost id
+      operationId: GetSendpost
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully get
+          schema:
+            $ref: '#/definitions/responses.Sendpost'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Get a sendpost
+      tags:
+      - Sendpost
+    post:
+      description: Copies a sendpost by its ID
+      operationId: CopySendpost
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Sendpost creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Senpost'
+      responses:
+        "201":
+          description: Successfully copied
+          schema:
+            $ref: '#/definitions/responses.Sendpost'
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Copy a sendpost
+      tags:
+      - Sendpost
+  /sendposts/{sendpost_id}/parameters:
+    post:
+      description: Add or update sendpost parameters by its ID
+      operationId: AddUpdateSendpostParameters
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Sendpost parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Parameters'
+      responses:
+        "200":
+          description: Successfully added or updated
+          schema:
+            type: string
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add or update sendpost parameters
+      tags:
+      - Sendpost
+  /sendposts/{sendpost_id}/parameters/{key}:
+    delete:
+      description: Delete sendpost parameter by its ID and key
+      operationId: DeleteSendpostParameter
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Parameter key
+        in: path
+        name: key
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid ID or key
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete sendpost parameter
+      tags:
+      - Sendpost
+  /sendposts/{sendpost_id}/run:
+    post:
+      consumes:
+      - application/json
+      description: Start the sendpost
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            type: string
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Start the sendpost
+      tags:
+      - Sendpost Runner
+  /sendposts/{sendpost_id}/run/ws:
+    get:
+      consumes:
+      - application/json
+      description: Establishes a WebSocket connection to receive status updates on
+        sendpost execution.
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Invalid ID
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Connect to WebSocket notifications for sendpost execution
+      tags:
+      - Notifications
+  /sendposts/{sendpost_id}/stages:
+    get:
+      consumes:
+      - application/json
+      description: Get all stages of a sendpost by its ID.
+      operationId: GetSendpostStages
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved stages
+          schema:
+            items:
+              $ref: '#/definitions/responses.Stage'
+            type: array
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get stages of a sendpost
+      tags:
+      - Stage
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Adds a new stage to the specified sendpost.
+        If `previous_stage_id` is provided adds stage after.
+        If field `next_stage_id` in the previous_stage is not null changes `next_stage_id` in previous_stage on the new provided stage id.
+        At the same time writes the new provided stage `next_stage_id` with previous_stage `next_stage_id` a.k.a this method allows insert stage between two stages.
+        Field `type` could be `PARALLEL|SEQUENTIAL|OBSERVER`.
+      operationId: AddStageToSendpost
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Stage'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully added stage
+          schema:
+            $ref: '#/definitions/responses.Stage'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a stage to a sendpost
+      tags:
+      - Stage
+  /sendposts/{sendpost_id}/stages/{stage_id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a stage by its ID. If the stage is linked to other stages,
+        they will be updated accordingly.
+      operationId: DeleteStage
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted
+          schema:
+            type: string
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Delete a stage
+      tags:
+      - Stage
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a stage by its ID.
+      operationId: GetStageDetailedInfo
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved stage
+          schema:
+            $ref: '#/definitions/responses.StageDetailed'
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get stage detailed info
+      tags:
+      - Stage
+    patch:
+      consumes:
+      - application/json
+      description: Block or unblock a stage by its ID.
+      operationId: BlockUnblockStage
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully blocked/unblocked
+          schema:
+            type: string
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+      summary: Block/Unblock a stage
+      tags:
+      - Stage
+    put:
+      consumes:
+      - application/json
+      description: Update parameters of a stage by its ID.
+      operationId: UpdateStageParameters
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      - description: Parameters
+        in: body
+        name: parameters
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Parameters'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully updated parameters
+          schema:
+            type: string
+        "400":
+          description: Invalid ID format
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Update stage parameters
+      tags:
+      - Stage
+  /sendposts/{sendpost_id}/stages/{stage_id}/sub-stages:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves the sub-stages of the specified stage.
+      operationId: GetSubStages
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved stages
+          schema:
+            items:
+              $ref: '#/definitions/responses.Stage'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get parallel stage sub-stages
+      tags:
+      - Stage
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Adds a sub-stage to an existing parent stage.
+        The sub-stage will be linked to the parent and can have deployment parameters.
+        Could only add sub-stage to PARALLEL stage type.
+      operationId: AddSubStage
+      parameters:
+      - description: Sendpost ID
+        in: path
+        name: sendpost_id
+        required: true
+        type: integer
+      - description: Stage ID
+        in: path
+        name: stage_id
+        required: true
+        type: integer
+      - description: Sub-stage creation data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/requests.Stage'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Successfully added sub-stage
+          schema:
+            $ref: '#/definitions/responses.Stage'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Add a sub-stage to a parent stage
+      tags:
+      - Stage
+schemes:
+- http
+swagger: "2.0"

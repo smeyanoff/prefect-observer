@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.fullnameOverride | default .Release.Name }}-frontend
+  namespace: observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.fullnameOverride | default .Release.Name }}-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.fullnameOverride | default .Release.Name }}-frontend
+    spec:
+      containers:
+        - name: observer-frontend
+          image: "{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}"
+          env:
+            - name: VUE_APP_BACKEND_API_HOST
+              value: "{{ .Values.frontend.backendApiHost }}"
+          ports:
+            - containerPort: {{ .Values.frontend.port }}

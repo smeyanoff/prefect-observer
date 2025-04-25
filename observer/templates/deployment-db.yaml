@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.fullnameOverride | default .Release.Name }}-db
+  namespace: observer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.fullnameOverride | default .Release.Name }}-db
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.fullnameOverride | default .Release.Name }}-db
+    spec:
+      initContainers:
+        - name: init-pgdata
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - "mkdir -p /mnt/observer-postgres/pgdata && chown -R 999:999 /mnt/observer-postgres/pgdata"
+          volumeMounts:
+            - name: db-storage
+              mountPath: /mnt/observer-postgres/
+      containers:
+        - name: observer-db
+          image: "{{ .Values.db.image }}"
+          env:
+            - name: POSTGRES_USER
+              value: "{{ .Values.db.user }}"
+            - name: POSTGRES_PASSWORD
+              value: "{{ .Values.db.password }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.db.database }}"
+            - name: POSTGRES_PORT
+              value: "{{ .Values.db.port }}"
+            - name: POSTGRES_HOST
+              value: "{{ .Values.db.host }}"
+            - name: PGDATA
+              value: "/mnt/observer-postgres/pgdata"
+          ports:
+            - containerPort: {{ .Values.db.port }}
+          volumeMounts:
+            - name: db-storage
+              mountPath: /mnt/observer-postgres/
+      volumes:
+        - name: db-storage
+          persistentVolumeClaim:
+            claimName: observer-pvc

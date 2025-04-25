@@ -1,0 +1,33 @@
+
+db:
+  host: "localhost"
+  port: "5432"
+  user: "backend_user"
+  pwd: "backenf_user_pwd"
+  database: "backend"
+  sslmode: "disable"   # enable | disable
+
+app:
+  prefectapiurl: "https://prefect.example/api"
+  insecureskipverify: true
+  stagestatusquerytimeout: 1
+  numworkers: 10
+  port: "8081"
+
+cors:
+  alloworigins:
+    - "https://prefect.example"
+    - "http://localhost"
+    - "http://localhost:8080"
+    - "https://api-observer.example"
+  allowmethods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "PATCH"
+  allowheaders:
+    - "Content-Type"
+    - "Authorization"
+    - "Origin"
+  allowcredentials: true

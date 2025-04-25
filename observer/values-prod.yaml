@@ -1,0 +1,23 @@
+db:
+  image: "postgres:13.20"
+  host: "observer-db.observer.svc.cluster.local"
+  port: 5432
+  database: "backend"
+  user: "backend_user"
+  password: "backend_user_pwd"
+  volumeSize: "5Gi"
+ 
+backend:
+  image: "cr.yandex/crp7mhgrb3nvmpj6fbfo/observer/backend"
+  tag: "latest"
+  port: 8180
+  prefectApiUrl: "https://prefect.ons.vita.local/api"
+  stageStatusQueryTimeout: 1
+  numWorkers: 5
+  host: "observer-backend.observer.svc.cluster.local"
+ 
+frontend:
+  image: "cr.yandex/crp7mhgrb3nvmpj6fbfo/observer/frontend"
+  tag: "latest"
+  port: 80
+  backendApiHost: "observer-backend.observer.svc.cluster.local:8180"

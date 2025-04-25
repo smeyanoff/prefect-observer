@@ -1,0 +1,42 @@
+stages:
+  - build
+  - update
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"
+
+variables:
+  BACKEND_IMAGE: $YC_CONTAINER_REGISTRY/observer/backend
+  FRONTEND_IMAGE: $YC_CONTAINER_REGISTRY/observer/frontend
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  
+.build-based: &build-based
+  before_script:
+    - docker info
+  stage: build
+  tags: [build]
+
+backend_build:
+  <<: *build-based
+  script:
+    - docker build -t $BACKEND_IMAGE:$IMAGE_TAG -t $BACKEND_IMAGE:latest ./backend
+    - docker push $BACKEND_IMAGE --all-tags
+ 
+frontend_build:
+  <<: *build-based
+  stage: build
+  script:
+    - docker build -t $FRONTEND_IMAGE:$IMAGE_TAG -t $FRONTEND_IMAGE:latest ./frontend
+      --build-arg BACKEND_HOST=$BACKEND_API_HOST
+    - docker push $FRONTEND_IMAGE --all-tags
+
+update_app:
+  stage: update
+  image: alpine/helm:3
+  script:
+    - helm upgrade --install observer ./observer/
+      --set backend.tag=$IMAGE_TAG
+      --set frontend.tag=$IMAGE_TAG
+      --values $VALUES_FILE
+      -n observer --create-namespace
